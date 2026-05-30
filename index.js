@@ -1,68 +1,42 @@
-// index.js
 const WebSocket = require('ws');
+const url = require('url');
 
-// Ambil PORT dari environment variable
-const PORT = process.env.PORT || 3000;
-
-// Buat WebSocket server
+const PORT = process.env.PORT || 8080;
 const wss = new WebSocket.Server({ port: PORT });
 
-console.log(`WebSocket server running on port ${PORT}`);
+console.log('WebSocket server running on port', PORT);
 
-// Menyimpan state tiap room
+// Menyimpan client per room
 const rooms = {};
 
 wss.on('connection', (ws, req) => {
-  console.log('New client connected');
+  const parameters = url.parse(req.url, true);
+  const roomId = parameters.query.room || 'default';
+  if (!rooms[roomId]) rooms[roomId] = new Set();
+  rooms[roomId].add(ws);
 
+  console.log(`New client joined room: ${roomId} - total: ${rooms[roomId].size}`);
+
+  // Kirim ID unik ke client (opsional)
+  ws.send(JSON.stringify({ type: 'id', id: Math.random().toString(36).substr(2, 9) }));
+
+  // Broadcast state ke semua client di room yang sama
   ws.on('message', (message) => {
-    try {
-      const data = JSON.parse(message);
+    let data;
+    try { data = JSON.parse(message); } catch(e) { return; }
 
-      // Pastikan client mengirim 'room' info
-      const room = data.room;
-      if (!room) return;
-
-      // Simpan client ke room
-      if (!rooms[room]) rooms[room] = [];
-      if (!rooms[room].includes(ws)) rooms[room].push(ws);
-
-      // Broadcast state ke semua client dalam room
-      rooms[room].forEach(client => {
+    if (data.type === 'input' || data.type === 'state') {
+      rooms[roomId].forEach(client => {
         if (client.readyState === WebSocket.OPEN) {
-          client.send(JSON.stringify({
-            type: 'state',
-            local: data.local || {},
-            remote: data.remote || {}
-          }));
+          client.send(JSON.stringify({ type: 'state', state: data.state || data }));
         }
       });
-
-      // Broadcast win info jika ada
-      if (data.type === 'win' && data.winner) {
-        rooms[room].forEach(client => {
-          if (client.readyState === WebSocket.OPEN) {
-            client.send(JSON.stringify({
-              type: 'win',
-              winner: data.winner
-            }));
-          }
-        });
-      }
-
-    } catch (err) {
-      console.error('Invalid message received:', err);
     }
   });
 
   ws.on('close', () => {
-    // Hapus client dari semua room
-    Object.keys(rooms).forEach(room => {
-      rooms[room] = rooms[room].filter(client => client !== ws);
-      if (rooms[room].length === 0) delete rooms[room];
-    });
-    console.log('Client disconnected');
+    rooms[roomId].delete(ws);
+    console.log(`Client left room: ${roomId} - total: ${rooms[roomId].size}`);
+    if (rooms[roomId].size === 0) delete rooms[roomId];
   });
-
-  ws.send(JSON.stringify({ type: 'connected', msg: 'Welcome to 2XKO server!' }));
 });

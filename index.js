@@ -2,7 +2,7 @@
 const WebSocket = require('ws');
 
 // Ambil PORT dari environment variable
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 
 // Buat WebSocket server
 const wss = new WebSocket.Server({ port: PORT });

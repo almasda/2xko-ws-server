@@ -6,161 +6,319 @@
 <title>2XKO Multiplayer Game</title>
 <style>
 body { margin:0; padding:0; overflow:hidden; background:#0a0a0a; font-family:sans-serif; }
-canvas { display:block; margin:0 auto; background:#0a0a0a; }
-#overlay { position:absolute; top:0; left:0; width:100%; height:100%; display:flex; justify-content:center; align-items:center; flex-direction:column; color:#0ff; font-size:2em; z-index:10; }
-.button { margin-top:20px; padding:15px 30px; font-size:20px; cursor:pointer; background:#0ff; border:none; border-radius:10px; color:#000; }
-#winScreen { display:none; flex-direction:column; align-items:center; justify-content:center; background: rgba(0,0,0,0.9); position:absolute; width:100%; height:100%; top:0; left:0; font-size:3em; color:#0ff; z-index:20; }
-#healthBar { position:absolute; top:20px; left:50%; transform:translateX(-50%); width:600px; display:flex; justify-content:space-between; }
-.health { width:250px; height:25px; background:rgba(255,255,255,0.2); border-radius:5px; overflow:hidden; }
-.health-fill { height:100%; background:green; width:100%; transition: width 0.2s; }
-#timer { position:absolute; top:60px; left:50%; transform:translateX(-50%); font-size:28px; color:#0ff; background:rgba(0,0,0,0.5); padding:5px 10px; border-radius:5px; }
+canvas { display:block; margin:0 auto; }
+#overlay { position:absolute; top:0; left:0; width:100%; height:100%; display:flex; justify-content:center; align-items:center; flex-direction:column; color:#0ff; font-size:2em; z-index:10; background:#0a0a0a; }
+.button { margin-top:20px; padding:15px 30px; font-size:20px; cursor:pointer; background:#0ff; border:none; border-radius:10px; color:#000; font-weight:bold; }
+.button:hover { background:#0cc; }
+#winScreen { display:none; flex-direction:column; align-items:center; justify-content:center; background:rgba(0,0,0,0.9); position:absolute; width:100%; height:100%; top:0; left:0; font-size:3em; color:#0ff; z-index:20; }
+#ui { position:absolute; top:0; left:0; width:100%; pointer-events:none; }
+#healthBars { display:flex; justify-content:space-between; padding:15px 40px; }
+.health-wrap { width:300px; }
+.health-label { color:#fff; font-size:16px; margin-bottom:4px; }
+.health-bg { width:100%; height:20px; background:rgba(255,255,255,0.2); border-radius:5px; overflow:hidden; }
+.health-fill { height:100%; background:lime; transition:width 0.1s; }
+#timer { text-align:center; font-size:36px; color:#0ff; font-weight:bold; text-shadow:0 0 10px #0ff; margin-top:5px; }
+.char { border:3px solid transparent; border-radius:8px; cursor:pointer; transition:all 0.2s; }
+.char:hover { transform:scale(1.1); border-color:#0ff; }
 </style>
 </head>
 <body>
 
-<canvas id="gameCanvas" width="1920" height="911"></canvas>
+<canvas id="gameCanvas"></canvas>
 
 <div id="overlay">
   <div id="lobbyScreen">
-    <h1>LOBBY</h1>
+    <h1 style="text-shadow:0 0 20px #0ff;letter-spacing:4px;">⚔ 2XKO ⚔</h1>
+    <p style="font-size:0.6em;color:#aaa;">Fighting Game Multiplayer</p>
     <button class="button" id="startSelect">FIND A MATCH</button>
   </div>
-  <div id="charSelectScreen" style="display:none;">
+  <div id="charSelectScreen" style="display:none; flex-direction:column; align-items:center;">
     <h1>SELECT CHARACTER</h1>
-    <div id="characters" style="display:flex; gap:20px;">
-      <div class="char" data-color="cyan" style="width:100px;height:100px;background:cyan;cursor:pointer;"></div>
-      <div class="char" data-color="magenta" style="width:100px;height:100px;background:magenta;cursor:pointer;"></div>
+    <div id="characters" style="display:flex; gap:30px; margin:20px 0;">
+      <div style="text-align:center;">
+        <div class="char" data-color="cyan" style="width:100px;height:100px;background:cyan;"></div>
+        <p style="font-size:0.5em;color:#0ff;">NEON BLUE</p>
+      </div>
+      <div style="text-align:center;">
+        <div class="char" data-color="magenta" style="width:100px;height:100px;background:magenta;"></div>
+        <p style="font-size:0.5em;color:#f0f;">NEON PINK</p>
+      </div>
+      <div style="text-align:center;">
+        <div class="char" data-color="yellow" style="width:100px;height:100px;background:yellow;"></div>
+        <p style="font-size:0.5em;color:yellow;">NEON YELLOW</p>
+      </div>
     </div>
     <button class="button" id="confirmChar">CONFIRM</button>
   </div>
 </div>
 
 <div id="winScreen">
-  <div id="winnerText"></div>
-  <button class="button" id="rematchBtn">REMATCH</button>
-  <button class="button" id="backLobbyBtn">BACK TO LOBBY</button>
+  <div id="winnerText" style="text-shadow:0 0 30px #0ff;"></div>
+  <div style="margin-top:30px; display:flex; gap:20px;">
+    <button class="button" id="rematchBtn">REMATCH</button>
+    <button class="button" id="backLobbyBtn" style="background:#f0f;">BACK TO LOBBY</button>
+  </div>
 </div>
 
-<div id="healthBar">
-  <div class="health"><div class="health-fill" id="p1Health"></div></div>
-  <div class="health"><div class="health-fill" id="p2Health"></div></div>
+<div id="ui">
+  <div id="healthBars">
+    <div class="health-wrap">
+      <div class="health-label">P1</div>
+      <div class="health-bg"><div class="health-fill" id="p1Health" style="width:100%;"></div></div>
+    </div>
+    <div class="health-wrap" style="text-align:right;">
+      <div class="health-label">P2</div>
+      <div class="health-bg"><div class="health-fill" id="p2Health" style="width:100%;"></div></div>
+    </div>
+  </div>
+  <div id="timer">60</div>
 </div>
-<div id="timer">60</div>
 
 <script>
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
+// Resize canvas to window
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+resizeCanvas();
+window.addEventListener('resize', resizeCanvas);
+
 let localColor = null;
 let remoteColor = null;
-let gameState = 'lobby'; // lobby, select, fight, win
+let gameState = 'lobby';
 let timer = 60;
+let myId = null;
 
 const overlay = document.getElementById('overlay');
 const lobbyScreen = document.getElementById('lobbyScreen');
 const charSelectScreen = document.getElementById('charSelectScreen');
 const winScreen = document.getElementById('winScreen');
 const winnerText = document.getElementById('winnerText');
-
 const p1HealthFill = document.getElementById('p1Health');
 const p2HealthFill = document.getElementById('p2Health');
 const timerEl = document.getElementById('timer');
 
-let localPlayer = {x:400,y:500,w:50,h:50,health:100};
-let remotePlayer = {x:700,y:500,w:50,h:50,health:100};
+let localPlayer = { x:300, y:400, w:50, h:70, health:100, flash:0 };
+let remotePlayer = { x:700, y:400, w:50, h:70, health:100, flash:0 };
 const keys = {};
 
-const ws = new WebSocket('wss://2xko-ws-server-production.up.railway.app');
-ws.onopen = () => console.log('Connected to WebSocket Railway');
+// Get room from URL
+const urlParams = new URLSearchParams(window.location.search);
+const roomId = urlParams.get('room') || 'default';
+
+// WebSocket
+const ws = new WebSocket('wss://2xko-ws-server-production.up.railway.app/?room=' + roomId);
+
+ws.onopen = () => {
+  console.log('Connected to WebSocket Railway, room:', roomId);
+};
+
 ws.onmessage = e => {
   const data = JSON.parse(e.data);
-  if(data.type==='state') {
-    remotePlayer = data.remote;
-    localPlayer = data.local;
+  if (data.type === 'id') {
+    myId = data.id;
   }
-  if(data.type==='win') {
+  if (data.type === 'state' && data.senderId !== myId) {
+    // Update remote player dari data yang dikirim lawan
+    remotePlayer.x = data.local.x;
+    remotePlayer.y = data.local.y;
+    remotePlayer.health = data.local.health;
+    remotePlayer.flash = data.local.flash || 0;
+    updateHealthUI();
+  }
+  if (data.type === 'win') {
     showWinScreen(data.winner);
   }
 };
 
 function sendState() {
-  ws.send(JSON.stringify({type:'state',local:localPlayer,remote:remotePlayer}));
+  if (ws.readyState === WebSocket.OPEN) {
+    ws.send(JSON.stringify({
+      type: 'state',
+      senderId: myId,
+      local: localPlayer,
+      room: roomId
+    }));
+  }
 }
 
-// --- Lobby & Character Select ---
+function updateHealthUI() {
+  p1HealthFill.style.width = Math.max(0, localPlayer.health) + '%';
+  p2HealthFill.style.width = Math.max(0, remotePlayer.health) + '%';
+  // Color change based on health
+  p1HealthFill.style.background = localPlayer.health > 50 ? 'lime' : localPlayer.health > 25 ? 'orange' : 'red';
+  p2HealthFill.style.background = remotePlayer.health > 50 ? 'lime' : remotePlayer.health > 25 ? 'orange' : 'red';
+}
+
+// Lobby
 document.getElementById('startSelect').onclick = () => {
   lobbyScreen.style.display = 'none';
   charSelectScreen.style.display = 'flex';
   gameState = 'select';
 };
 
-document.querySelectorAll('.char').forEach(el=>{
+document.querySelectorAll('.char').forEach(el => {
   el.onclick = () => {
     localColor = el.dataset.color;
-    remoteColor = (localColor==='cyan')?'magenta':'cyan';
-    document.querySelectorAll('.char').forEach(c=>c.style.outline='');
-    el.style.outline = '5px solid yellow';
+    remoteColor = localColor === 'cyan' ? 'magenta' : localColor === 'magenta' ? 'yellow' : 'cyan';
+    document.querySelectorAll('.char').forEach(c => c.style.border = '3px solid transparent');
+    el.style.border = '5px solid yellow';
   };
 });
 
 document.getElementById('confirmChar').onclick = () => {
-  if(!localColor) return alert('Pilih karakter dulu!');
-  charSelectScreen.style.display='none';
-  overlay.style.display='none';
-  gameState='fight';
+  if (!localColor) return alert('Pilih karakter dulu!');
+  overlay.style.display = 'none';
+  localPlayer = { x: 300, y: canvas.height - 150, w: 50, h: 70, health: 100, flash: 0 };
+  remotePlayer = { x: 700, y: canvas.height - 150, w: 50, h: 70, health: 100, flash: 0 };
+  gameState = 'fight';
 };
 
-// --- Win Screen ---
 document.getElementById('rematchBtn').onclick = () => location.reload();
 document.getElementById('backLobbyBtn').onclick = () => location.reload();
 
-// --- Keyboard ---
-document.addEventListener('keydown',e=>keys[e.key.toLowerCase()]=true);
-document.addEventListener('keyup',e=>keys[e.key.toLowerCase()]=false);
+// Keyboard
+document.addEventListener('keydown', e => { keys[e.key.toLowerCase()] = true; e.preventDefault(); });
+document.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
 
-// --- Game loop ---
+// Draw stage background
+function drawStage() {
+  // Sky/background
+  const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  grad.addColorStop(0, '#050520');
+  grad.addColorStop(1, '#0a0a2a');
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+  // Arcade cabinets in background
+  ctx.fillStyle = '#0a1a2a';
+  for (let i = 0; i < canvas.width; i += 120) {
+    ctx.strokeStyle = '#0ff';
+    ctx.lineWidth = 1;
+    ctx.strokeRect(i + 10, 30, 80, 120);
+    ctx.fillRect(i + 10, 30, 80, 120);
+    // Screen glow
+    ctx.fillStyle = `rgba(0,255,255,${0.1 + Math.sin(Date.now()/500 + i)*0.05})`;
+    ctx.fillRect(i + 20, 45, 60, 70);
+    ctx.fillStyle = '#0a1a2a';
+  }
+
+  // Floor
+  const floorY = canvas.height - 80;
+  ctx.fillStyle = '#111133';
+  ctx.fillRect(0, floorY, canvas.width, 80);
+
+  // Floor neon line
+  ctx.strokeStyle = '#0ff';
+  ctx.lineWidth = 2;
+  ctx.shadowColor = '#0ff';
+  ctx.shadowBlur = 10;
+  ctx.beginPath();
+  ctx.moveTo(0, floorY);
+  ctx.lineTo(canvas.width, floorY);
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+
+  // Floor reflection
+  const reflGrad = ctx.createLinearGradient(0, floorY, 0, canvas.height);
+  reflGrad.addColorStop(0, 'rgba(0,255,255,0.1)');
+  reflGrad.addColorStop(1, 'rgba(0,0,0,0)');
+  ctx.fillStyle = reflGrad;
+  ctx.fillRect(0, floorY, canvas.width, 80);
+}
+
+// Game update
 function update() {
-  if(gameState==='fight'){
-    if(keys['a']) localPlayer.x -=5;
-    if(keys['d']) localPlayer.x +=5;
-    if(keys['f'] && Math.abs(localPlayer.x-remotePlayer.x)<60) {
-      remotePlayer.health -=1;
-      sendState();
-    }
-    if(keys['arrowleft']) remotePlayer.x -=5;
-    if(keys['arrowright']) remotePlayer.x +=5;
+  if (gameState === 'fight') {
+    const floorY = canvas.height - 80 - localPlayer.h;
 
-    timer -=0.016;
-    if(localPlayer.health<=0 || remotePlayer.health<=0 || timer<=0){
-      const winner = (localPlayer.health>remotePlayer.health)?'PLAYER 1':'PLAYER 2';
+    if (keys['a']) localPlayer.x -= 5;
+    if (keys['d']) localPlayer.x += 5;
+
+    // Keep in bounds
+    localPlayer.x = Math.max(0, Math.min(canvas.width - localPlayer.w, localPlayer.x));
+    localPlayer.y = floorY;
+
+    // Attack
+    if (keys['f'] && Math.abs(localPlayer.x - remotePlayer.x) < 80) {
+      remotePlayer.health -= 0.5;
+      remotePlayer.flash = 5;
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({
+          type: 'state',
+          senderId: myId,
+          local: localPlayer,
+          room: roomId
+        }));
+      }
+    }
+
+    if (localPlayer.flash > 0) localPlayer.flash--;
+    if (remotePlayer.flash > 0) remotePlayer.flash--;
+
+    timer -= 0.016;
+    timerEl.innerText = Math.max(0, Math.floor(timer));
+    updateHealthUI();
+
+    // Win condition
+    if (localPlayer.health <= 0 || remotePlayer.health <= 0 || timer <= 0) {
+      const winner = localPlayer.health >= remotePlayer.health ? 'PLAYER 1' : 'PLAYER 2';
       showWinScreen(winner);
-      gameState='win';
+      if (ws.readyState === WebSocket.OPEN) {
+        ws.send(JSON.stringify({ type: 'win', winner, room: roomId }));
+      }
+      gameState = 'win';
     }
 
-    p1HealthFill.style.width = localPlayer.health*2+'px';
-    p2HealthFill.style.width = remotePlayer.health*2+'px';
-    timerEl.innerText = Math.floor(timer);
     sendState();
   }
 }
 
-function draw(){
-  ctx.clearRect(0,0,canvas.width,canvas.height);
-  if(gameState==='fight'){
-    ctx.fillStyle = localColor || 'cyan';
-    ctx.fillRect(localPlayer.x,localPlayer.y,localPlayer.w,localPlayer.h);
-    ctx.fillStyle = remoteColor || 'magenta';
-    ctx.fillRect(remotePlayer.x,remotePlayer.y,remotePlayer.w,remotePlayer.h);
+// Draw players
+function drawPlayers() {
+  // Local player
+  if (localPlayer.flash > 0) {
+    ctx.shadowColor = 'white';
+    ctx.shadowBlur = 20;
+  }
+  ctx.fillStyle = localColor || 'cyan';
+  ctx.fillRect(localPlayer.x, localPlayer.y, localPlayer.w, localPlayer.h);
+  ctx.shadowBlur = 0;
+
+  // Remote player
+  if (remotePlayer.flash > 0) {
+    ctx.shadowColor = 'white';
+    ctx.shadowBlur = 20;
+  }
+  ctx.fillStyle = remoteColor || 'magenta';
+  ctx.fillRect(remotePlayer.x, remotePlayer.y, remotePlayer.w, remotePlayer.h);
+  ctx.shadowBlur = 0;
+
+  // Name labels
+  ctx.fillStyle = '#fff';
+  ctx.font = '14px sans-serif';
+  ctx.textAlign = 'center';
+  ctx.fillText('P1', localPlayer.x + localPlayer.w/2, localPlayer.y - 8);
+  ctx.fillText('P2', remotePlayer.x + remotePlayer.w/2, remotePlayer.y - 8);
+}
+
+function draw() {
+  drawStage();
+  if (gameState === 'fight' || gameState === 'win') {
+    drawPlayers();
   }
   requestAnimationFrame(draw);
 }
 
-function showWinScreen(winner){
+function showWinScreen(winner) {
   winnerText.innerText = winner + ' WINS!';
-  winScreen.style.display='flex';
+  winScreen.style.display = 'flex';
 }
 
-function loop(){
+function loop() {
   update();
   requestAnimationFrame(loop);
 }
